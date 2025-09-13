@@ -36,25 +36,25 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform Init
-        working-directory: infra
-        run: terraform init
-
-      # optional: enable if you want strict formatting
-      # - name: Terraform Fmt
+      # - name: Terraform Init
       #   working-directory: infra
-      #   run: terraform fmt -check -recursive
+      #   run: terraform init
 
-      - name: Terraform Validate
-        working-directory: infra
-        run: terraform validate
+      # # optional: enable if you want strict formatting
+      # # - name: Terraform Fmt
+      # #   working-directory: infra
+      # #   run: terraform fmt -check -recursive
 
-      - name: Terraform Plan
-        working-directory: infra
-        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
+      # - name: Terraform Validate
+      #   working-directory: infra
+      #   run: terraform validate
+
+      # - name: Terraform Plan
+      #   working-directory: infra
+      #   run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
 
       - name: Terraform Destroy
         if: ${{ github.event.inputs.action == 'destroy' }}
