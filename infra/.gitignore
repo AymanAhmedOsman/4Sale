@@ -1,0 +1,16 @@
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+crash.log
+crash.*.log
+
+# Ignore all tfvars except dev & prod
+*.tfvars
+!dev.tfvars
+!prod.tfvars
+
+# VSCode
+.vscode/
+*.code-workspace

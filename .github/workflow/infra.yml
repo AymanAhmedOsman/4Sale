@@ -1,0 +1,49 @@
+on: 
+  workflow dispatch:
+    inputs:
+      environment:
+        description: "choose environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+      - name: Terraform Fmt
+        working-directory: infra
+        run: terraform fmt -check -recursive
+      - name: Validate
+        working-directory: infra
+        run: terraform validate
+      - name: Plan (dev)
+        working-directory: infra
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: tfsec  # to detect misconfigurations and enforce security best practices before you deploy.
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infra
+          soft_fail: true  #  step makes the scanner non-blocking.- step makes the scanner non-blocking.
+      - name: Apply (manual)
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: infra
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
