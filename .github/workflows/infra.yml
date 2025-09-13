@@ -13,6 +13,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write    # needed for OIDC!
+      contents: read     # usually also needed
+
 
     steps:
       - name: Checkout code
