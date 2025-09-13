@@ -56,12 +56,19 @@ jobs:
         working-directory: infra
         run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
 
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        working-directory: infra
+        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+
+
       - name: Run tfsec (security scan)
         uses: aquasecurity/tfsec-action@v1.0.3
         with:
           working_directory: infra
           soft_fail: true  # Makes scanner non-blocking
 
+      
       - name: Terraform Apply
         if: ${{ github.event.inputs.action == 'apply' }}
         working-directory: infra
