@@ -36,25 +36,25 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-      # - name: Terraform Init
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      # optional: enable if you want strict formatting
+      # - name: Terraform Fmt
       #   working-directory: infra
-      #   run: terraform init
+      #   run: terraform fmt -check -recursive
 
-      # # optional: enable if you want strict formatting
-      # # - name: Terraform Fmt
-      # #   working-directory: infra
-      # #   run: terraform fmt -check -recursive
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
 
-      # - name: Terraform Validate
-      #   working-directory: infra
-      #   run: terraform validate
-
-      # - name: Terraform Plan
-      #   working-directory: infra
-      #   run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: Terraform Plan
+        working-directory: infra
+        run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
 
       - name: Terraform Destroy
         if: ${{ github.event.inputs.action == 'destroy' }}
@@ -62,19 +62,19 @@ jobs:
         run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
 
 
-      # - name: Run tfsec (security scan)
-      #   uses: aquasecurity/tfsec-action@v1.0.3
-      #   with:
-      #     working_directory: infra
-      #     soft_fail: true  # Makes scanner non-blocking
+      - name: Run tfsec (security scan)
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: infra
+          soft_fail: true  # Makes scanner non-blocking
 
       
-      # - name: Terraform Apply
-      #   if: ${{ github.event.inputs.action == 'apply' }}
-      #   working-directory: infra
-      #   run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: Terraform Apply
+        if: ${{ github.event.inputs.action == 'apply' }}
+        working-directory: infra
+        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
 
-      # - name: Terraform Destroy
-      #   if: ${{ github.event.inputs.action == 'destroy' }}
-      #   working-directory: infra
-      #   run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        working-directory: infra
+        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
