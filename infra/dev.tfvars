@@ -11,6 +11,9 @@ rds-sg-name             = "rds-subnet group"
 instance-type = "t3.micro"
 ec2-ami = "ami-01f23391a59163da9"
 ec2-ami-importTF = "ami-09b024e886d7bbe74"
+#-----------------ELB-----------
+
+alb-name= "demo-alb"
 #--------------RDS-----------
 # rds-instance_class      = "db.t3.micro"
 # rds-username            = "foo"
