@@ -10,6 +10,15 @@ on:
           - dev
           - prod
 
+      action:
+        description: "Terraform action"
+        required: true
+        default: "apply"
+        type: choice
+        options:
+          - apply
+          - destroy
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -54,6 +63,10 @@ jobs:
           soft_fail: true  # Makes scanner non-blocking
 
       - name: Terraform Apply (manual trigger only)
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'apply'
         working-directory: infra
         run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy'
+        working-directory: infra
+        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
