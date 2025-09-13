@@ -23,9 +23,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write    # needed for OIDC!
+      id-token: write    # needed for OIDC
       contents: read     # usually also needed
-
 
     steps:
       - name: Checkout code
@@ -44,6 +43,7 @@ jobs:
         working-directory: infra
         run: terraform init
 
+      # optional: enable if you want strict formatting
       # - name: Terraform Fmt
       #   working-directory: infra
       #   run: terraform fmt -check -recursive
@@ -62,11 +62,12 @@ jobs:
           working_directory: infra
           soft_fail: true  # Makes scanner non-blocking
 
-      - name: Terraform Apply (manual trigger only)
-        if: github.event_name == 'apply'
+      - name: Terraform Apply
+        if: ${{ github.event.inputs.action == 'apply' }}
         working-directory: infra
         run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+
       - name: Terraform Destroy
-        if: github.event.inputs.action == 'destroy'
+        if: ${{ github.event.inputs.action == 'destroy' }}
         working-directory: infra
         run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
