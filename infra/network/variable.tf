@@ -31,7 +31,3 @@ variable "subnet_private2_cidr" {
 }
 
 
-variable "rds-sg-name" {
-    type = string
-  
-}

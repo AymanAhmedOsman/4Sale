@@ -19,7 +19,4 @@ output "subnet_id-private2" {
   
 }
 
-output "rds-sg-name" {
-    value = aws_db_subnet_group.RDS.name
-  
-}
+

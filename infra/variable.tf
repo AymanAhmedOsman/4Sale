@@ -26,10 +26,6 @@ variable "subnet-private2-cider" {
 
 
 
-variable "rds-sg-name" {
-    type = string
-  
-}
 
 #----------  variable DB ---------------------
 # variable "rds-password" {
