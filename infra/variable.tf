@@ -23,35 +23,6 @@ variable "subnet-private2-cider" {
     type = string
   
 }
-
-
-
-
-#----------  variable DB ---------------------
-# variable "rds-password" {
-#     type = string
-# }
-
-# variable "rds-username" {
-#     type = string
-# }
-
-# variable "rds-instance_class" {
-#     type = string
-# }
-
-# variable "rds-name" {
-#     type = string
-# }
-
-#-----------ALB-----------
-
-variable "alb-name" {
-    type = string
-  
-}
-
-
 #--------------EC2-------------
 
 variable "ec2-ami" {
@@ -74,19 +45,19 @@ variable "private-sg-name" {
   type = string
 }
 
-# #------------EKS--------------
-# variable "cluster-name" {
-#     type = string
-#     default = "demo-cluster"
+#------------EKS--------------
+variable "cluster-name" {
+    type = string
+    default = "demo-cluster"
   
-# }
+}
 
 
-# variable "node-group-name" {
-#     type = string
-#     default = ""
+variable "node-group-name" {
+    type = string
+    default = ""
   
-# }
+}
 
 
     

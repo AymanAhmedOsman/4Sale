@@ -11,19 +11,6 @@ module "network" {
 }
 
 
-#------------ALB-Module--------------
-
-module "alb" {
-    source = "./alb"
-    vpc_id= module.network.vpc_id
-    alb-name = var.alb-name
-    instance-id = module.ec2.instance-id
-    public-sg-name = module.security_groups.public-sg-name
-    subnet_id-public1 = module.network.subnet_id-public1
-    subnet_id-public2 = module.network.subnet_id-public2
-    
-}
-
 #------------EC2--------------
 
 module "ec2" {
@@ -44,15 +31,15 @@ module "security_groups" {
   
 }
 
-# #----EKSModule----------
-#  module "eks" {
+#----EKSModule----------
+ module "eks" {
    
-#    source = "./eks"
-# cluster-name= var.cluster-name
-# subnet-private-1-id =module.network.subnet_id-private1
-# subnet-private-2-id =module.network.subnet_id-private2
-# subnet-public-1-id =module.network.subnet_id-public1
-# subnet-public-2-id =module.network.subnet_id-public2
-# node-group-name =var.node-group-name
+   source = "./eks"
+cluster-name= var.cluster-name
+subnet-private-1-id =module.network.subnet_id-private1
+subnet-private-2-id =module.network.subnet_id-private2
+subnet-public-1-id =module.network.subnet_id-public1
+subnet-public-2-id =module.network.subnet_id-public2
+node-group-name =var.node-group-name
  
-#  }
+ }

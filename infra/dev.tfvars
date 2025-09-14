@@ -10,23 +10,13 @@ subnet-private2-cider   = "10.0.2.0/24"
 #---------------EC2-----------
 instance-type = "t3.micro"
 ec2-ami = "ami-01f23391a59163da9"
-#-----------------ELB-----------
 
-alb-name= "demo-alb"
-#--------------RDS-----------
-# rds-instance_class      = "db.t3.micro"
-# rds-username            = "foo"
-# rds-password            = "foobarbaz"
-# alb-name                = "demo-alb"
-# rds-name                = "demords"
-
-#--------------------Security-group--------------
 
 public-sg-name      = "Allow-HTTP"
 private-sg-name     = "Allow-RDs-Access "
 
 # #----------EKS------------
 
-# cluster-name= "demo-cluster"
-# node-group-name= "demo-node-group"
+cluster-name= "demo-cluster"
+node-group-name= "demo-node-group"
  
