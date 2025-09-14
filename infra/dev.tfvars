@@ -10,7 +10,6 @@ rds-sg-name             = "rds-subnet group"
 #---------------EC2-----------
 instance-type = "t3.micro"
 ec2-ami = "ami-01f23391a59163da9"
-ec2-ami-importTF = "ami-09b024e886d7bbe74"
 #-----------------ELB-----------
 
 alb-name= "demo-alb"
@@ -26,8 +25,8 @@ alb-name= "demo-alb"
 public-sg-name      = "Allow-HTTP"
 private-sg-name     = "Allow-RDs-Access "
 
-#----------EKS------------
+# #----------EKS------------
 
-cluster-name= "demo-cluster"
-node-group-name= "demo-node-group"
+# cluster-name= "demo-cluster"
+# node-group-name= "demo-node-group"
  

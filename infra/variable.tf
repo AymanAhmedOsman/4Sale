@@ -62,10 +62,7 @@ variable "ec2-ami" {
     type = string
   
 }
-variable "ec2-ami-importTF" {
-    type = string
-  
-}
+
 variable "instance-type" {
     type = string
   
@@ -81,19 +78,19 @@ variable "private-sg-name" {
   type = string
 }
 
-#------------EKS--------------
-variable "cluster-name" {
-    type = string
-    default = "demo-cluster"
+# #------------EKS--------------
+# variable "cluster-name" {
+#     type = string
+#     default = "demo-cluster"
   
-}
+# }
 
 
-variable "node-group-name" {
-    type = string
-    default = ""
+# variable "node-group-name" {
+#     type = string
+#     default = ""
   
-}
+# }
 
 
     

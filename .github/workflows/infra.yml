@@ -56,11 +56,6 @@ jobs:
         working-directory: infra
         run: terraform plan -var-file=${{ github.event.inputs.environment }}.tfvars
 
-      - name: Terraform Destroy
-        if: ${{ github.event.inputs.action == 'destroy' }}
-        working-directory: infra
-        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
-
 
       - name: Run tfsec (security scan)
         uses: aquasecurity/tfsec-action@v1.0.3
@@ -69,12 +64,17 @@ jobs:
           soft_fail: true  # Makes scanner non-blocking
 
       
-      - name: Terraform Apply
-        if: ${{ github.event.inputs.action == 'apply' }}
+      - name: Terraform Apply Or Destroy
+        
         working-directory: infra
-        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+        run: terraform ${{ github.event.inputs.action }} -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      
+      # - name: Terraform Apply
+      #   if: ${{ github.event.inputs.action == 'apply' }}
+      #   working-directory: infra
+      #   run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
 
-      - name: Terraform Destroy
-        if: ${{ github.event.inputs.action == 'destroy' }}
-        working-directory: infra
-        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      # - name: Terraform Destroy
+      #   if: ${{ github.event.inputs.action == 'destroy' }}
+      #   working-directory: infra
+      #   run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
