@@ -39,13 +39,10 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
 
-
-
       - name: Terraform Init
-        if: ${{ inputs.action == 'apply' }}
         working-directory: infra
         run: terraform init
-        
+
       - name: Terraform Destroy
         if: ${{ github.event.inputs.action == 'destroy' }}
         working-directory: infra
