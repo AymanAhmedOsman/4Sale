@@ -47,7 +47,8 @@ jobs:
         if: ${{ github.event.inputs.action == 'destroy' }}
         working-directory: infra
         run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
-      # optional: enable if you want strict formatting
+      
+        # optional: enable if you want strict formatting
       # - name: Terraform Fmt
       #   working-directory: infra
       #   run: terraform fmt -check -recursive
