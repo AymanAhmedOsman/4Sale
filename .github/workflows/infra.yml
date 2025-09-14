@@ -42,11 +42,6 @@ jobs:
       - name: Terraform Init
         working-directory: infra
         run: terraform init
-
-      - name: Terraform Destroy
-        if: ${{ github.event.inputs.action == 'destroy' }}
-        working-directory: infra
-        run: terraform destroy -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
       
         # optional: enable if you want strict formatting
       # - name: Terraform Fmt
@@ -71,13 +66,9 @@ jobs:
           soft_fail: true  # Makes scanner non-blocking
 
       
-      # - name: Terraform Apply Or Destroy
-        
-      #   working-directory: infra
-      #   run: terraform ${{ github.event.inputs.action }} -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
-      
-      - name: Terraform Apply
-        if: ${{ github.event.inputs.action == 'apply' }}
+      - name: Terraform Apply Or Destroy
         working-directory: infra
-        run: terraform apply -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+        run: terraform ${{ github.event.inputs.action }} -auto-approve -var-file=${{ github.event.inputs.environment }}.tfvars
+      
+
 
