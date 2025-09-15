@@ -45,6 +45,7 @@ variable "private-sg-name" {
   type = string
 }
 
+
 #------------EKS--------------
 variable "cluster-name" {
     type = string

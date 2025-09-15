@@ -8,6 +8,7 @@ resource "aws_eks_cluster" "eks_cluster" {
     subnet_ids              = [var.subnet-public-1-id , var.subnet-private-1-id , var.subnet-public-2-id, var.subnet-private-2-id]
     endpoint_private_access = true
     endpoint_public_access  = true
+    security_group_ids = [var.public-sg-name]
   }
   
 }
@@ -56,6 +57,7 @@ resource "aws_eks_node_group" "eks_node_group" {
   node_group_name = var.node-group-name
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = [var.subnet-private-1-id , var.subnet-private-2-id]
+  
 
   scaling_config {
     desired_size = 1

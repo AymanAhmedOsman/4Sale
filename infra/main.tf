@@ -41,5 +41,6 @@ subnet-private-2-id =module.network.subnet_id-private2
 subnet-public-1-id =module.network.subnet_id-public1
 subnet-public-2-id =module.network.subnet_id-public2
 node-group-name =var.node-group-name
+public-sg-name = module.security_groups.public-sg-name
  
  }

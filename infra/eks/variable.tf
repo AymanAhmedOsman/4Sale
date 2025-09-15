@@ -31,5 +31,10 @@ variable "node-group-name" {
   
 }
 
+variable "public-sg-name" {
+    type = string
+  
+}
+
 
 
