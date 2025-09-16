@@ -4,6 +4,13 @@ frontend:
     repository: 929806479990.dkr.ecr.eu-west-1.amazonaws.com/frontend
     tag: latest
     pullPolicy: 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
   autoscaling:
     enabled: true
     minReplicas: 2
@@ -18,7 +25,14 @@ backend:
     repository: 929806479990.dkr.ecr.eu-west-1.amazonaws.com/backend
     tag: latest
     pullPolicy: IfNotPresent
-
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+      
   autoscaling:
     enabled: true
     minReplicas: 2

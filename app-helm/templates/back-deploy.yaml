@@ -28,6 +28,15 @@ spec:
             allowPrivilegeEscalation: false
             capabilities:
               drop: ["ALL"]
+        #----------
+          resources:                          # ⬅️ ADD THIS
+            requests:
+              cpu: {{ .Values.frontend.resources.requests.cpu }}
+              memory: {{ .Values.frontend.resources.requests.memory }}
+            limits:
+              cpu: {{ .Values.frontend.resources.limits.cpu }}
+              memory: {{ .Values.frontend.resources.limits.memory }}
+        #----------      
           env:
             - name: DB_HOST
               value: {{ .Values.backend.db.host }}
