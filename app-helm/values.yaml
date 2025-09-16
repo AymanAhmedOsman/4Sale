@@ -3,7 +3,13 @@ frontend:
   image:
     repository: 929806479990.dkr.ecr.eu-west-1.amazonaws.com/frontend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: 
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80   
 
 
 backend:
@@ -12,6 +18,13 @@ backend:
     repository: 929806479990.dkr.ecr.eu-west-1.amazonaws.com/backend
     tag: latest
     pullPolicy: IfNotPresent
+
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80     
   db:
     host: tasks-postgres-postgresql.data.svc.cluster.local
     port: "5432"
