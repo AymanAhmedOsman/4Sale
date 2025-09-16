@@ -59,6 +59,10 @@ variable "node-group-name" {
     default = ""
   
 }
+variable "key_name" {
+    type = string
+  
+}
 
 
     

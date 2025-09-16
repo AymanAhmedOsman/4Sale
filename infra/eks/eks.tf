@@ -64,7 +64,7 @@ resource "aws_eks_node_group" "eks_node_group" {
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = [var.subnet-private-1-id , var.subnet-private-2-id]
   remote_access {
-    
+    ec2_ssh_key            = var.key_name
     source_security_group_ids = [ var.public-sg-name]
 
   }
