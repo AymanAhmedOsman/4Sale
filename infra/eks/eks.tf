@@ -184,10 +184,14 @@ resource "helm_release" "aws_load_balancer_controller" {
   ]
 }
 
+resource "aws_iam_policy" "alb_controller_policy" {
+  name        = "AWSLoadBalancerControllerIAMPolicy"
+  description = "IAM policy for AWS Load Balancer Controller"
+  policy      = file("iam-policy.json")
+}
 
-
-
-
-
-
+resource "aws_iam_role_policy_attachment" "alb_controller_policy_attach" {
+  role       = aws_iam_role.alb_controller_role.name
+  policy_arn = aws_iam_policy.alb_controller_policy.arn
+}
 
