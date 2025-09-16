@@ -41,6 +41,12 @@ resource "aws_iam_role" "lb_controller_role" {
   assume_role_policy = data.aws_iam_policy_document.lb_controller_assume_role_policy.json
 }
 
+# If you need to use Alb and change all lb to alb
+# resource "aws_iam_role_policy_attachment" "alb_controller_policy" {
+#   role       = aws_iam_role.alb_controller_role.name
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancerControllerPolicy"
+# }
+
 data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -57,7 +63,11 @@ resource "aws_eks_node_group" "eks_node_group" {
   node_group_name = var.node-group-name
   node_role_arn   = aws_iam_role.eks_node_role.arn
   subnet_ids      = [var.subnet-private-1-id , var.subnet-private-2-id]
-  
+  remote_access {
+    
+    source_security_group_ids = [ var.public-sg-name]
+
+  }
 
   scaling_config {
     desired_size = 1
@@ -110,3 +120,36 @@ provider "kubernetes" {
 data "aws_eks_cluster_auth" "eks_auth" {
   name = aws_eks_cluster.eks_cluster.name
 }
+
+
+#Install AWS Load Balancer Controller via Helm
+# provider "helm" {
+#   kubernetes {
+#     host                   = aws_eks_cluster.eks_cluster.endpoint
+#     cluster_ca_certificate = base64decode(aws_eks_cluster.eks_cluster.certificate_authority[0].data)
+#     token                  = data.aws_eks_cluster_auth.eks_auth.token
+#   }
+# }
+
+# resource "helm_release" "aws_load_balancer_controller" {
+#   name       = "aws-load-balancer-controller"
+#   repository = "https://aws.github.io/eks-charts"
+#   chart      = "aws-load-balancer-controller"
+#   namespace  = "kube-system"
+
+#   set {
+#     name  = "clusterName"
+#     value = aws_eks_cluster.eks_cluster.name
+#   }
+
+#   set {
+#     name  = "serviceAccount.create"
+#     value = "false"
+#   }
+
+#   set {
+#     name  = "serviceAccount.name"
+#     value = "aws-load-balancer-controller"
+#   }
+# }
+

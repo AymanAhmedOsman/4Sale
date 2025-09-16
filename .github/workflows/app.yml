@@ -1,78 +1,92 @@
-name: App CI/CD
+name: Deploy App to EKS
+
 on:
-  push:
-    paths:
-      - 'app/**'
-      - 'helm/**'
-      - '.github/workflows/app.yml'
+  # push:
+  #   branches: [ "main" ]
   workflow_dispatch:
 
 env:
-  REGISTRY: ghcr.io
-  IMAGE_BACKEND: ${{ github.repository }}/backend
-  IMAGE_FRONTEND: ${{ github.repository }}/frontend
+  AWS_REGION: eu-west-1                     # Change to your AWS region
+  EKS_CLUSTER_NAME: demo-cluster            # Change to your EKS cluster name
+  FRONTEND_IMAGE: frontend                  # Only repo name
+  BACKEND_IMAGE: backend                    # Only repo name
 
 jobs:
-  build-scan-sign:
+  build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write   # 👈 REQUIRED for OIDC
       contents: read
-      packages: write
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-      - name: Login GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build images
-        run: |
-          docker build -t $REGISTRY/${{ env.IMAGE_BACKEND }}:${{ github.sha }} app/backend
-          docker build -t $REGISTRY/${{ env.IMAGE_FRONTEND }}:${{ github.sha }} app/frontend
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@0.24.0
-        with:
-          image-ref: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
-          format: 'table'
-          exit-code: '0'
-      - name: Push images
-        run: |
-          docker push $REGISTRY/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
-          docker push $REGISTRY/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
-      - name: Cosign install
-        uses: sigstore/cosign-installer@v3
-      - name: Cosign sign (keyless)
-        env:
-          COSIGN_EXPERIMENTAL: "true"
-        run: |
-          cosign sign $REGISTRY/${{ env.IMAGE_BACKEND }}:${{ github.sha }}
-          cosign sign $REGISTRY/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
 
-  deploy:
-    needs: build-scan-sign
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: azure/setup-kubectl@v4
-      - uses: azure/setup-helm@v4
-      - name: Configure AWS (OIDC)
+      # 1. Checkout
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # 2. Configure AWS (using OIDC)
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
-      - name: Helm dependency update
-        run: helm dependency update helm/tasks-app
-      - name: Set image tags and deploy
+          aws-region: ${{ env.AWS_REGION }}
+
+      # 3. Login to ECR
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      # 4. Build & Push Frontend
+      - name: Build and Push Frontend
         run: |
-          helm upgrade --install tasks helm/tasks-app -n app             --create-namespace             --set image.backend=${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:${{ github.sha }}             --set image.frontend=${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:${{ github.sha }}
-      - name: Validate RBAC (example)
-        run: kubectl auth can-i get pods -n app
+          FRONTEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.FRONTEND_IMAGE }}
+          docker build -t $FRONTEND_REPO:latest ./app-docker/frontend
+          docker push $FRONTEND_REPO:latest
+
+      # 5. Build & Push Backend
+      - name: Build and Push Backend
+        run: |
+          BACKEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.BACKEND_IMAGE }}
+          docker build -t $BACKEND_REPO:latest ./app-docker/backend
+          docker push $BACKEND_REPO:latest
+
+      # 6. Update kubeconfig
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ env.EKS_CLUSTER_NAME }} --region ${{ env.AWS_REGION }}
+
+      # 7. Create namespaces with PSA
+      - name: Create namespaces
+        run: |
+          kubectl create namespace app --dry-run=client -o yaml | kubectl apply -f -
+          kubectl create namespace data --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label namespace app pod-security.kubernetes.io/enforce=restricted --overwrite
+          kubectl label namespace data pod-security.kubernetes.io/enforce=restricted --overwrite
+
+      # 8. Install Postgres in "data"
+      - name: Install Postgres via Helm
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo update
+          helm upgrade --install tasks-postgres bitnami/postgresql \
+            --namespace data --create-namespace \
+            --set auth.username=postgres \
+            --set auth.password=${{ secrets.DB_PASSWORD }} \
+            --set auth.database=${{ secrets.DB_DATABASE }} \
+            --set primary.persistence.enabled=false
+
+      # 9. Deploy App chart (frontend + backend) in "app"
+      - name: Deploy App Helm Chart
+        run: |
+          FRONTEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.FRONTEND_IMAGE }}
+          BACKEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.BACKEND_IMAGE }}
+
+          helm upgrade --install app ./app-helm -n app \
+            --set frontend.image.repository=$FRONTEND_REPO \
+            --set frontend.image.tag=latest \
+            --set backend.image.repository=$BACKEND_REPO \
+            --set backend.image.tag=latest \
+            --set backend.db.host=tasks-postgres-postgresql.data.svc.cluster.local \
+            --set backend.db.port=5432 \
+            --set backend.db.name=${{ secrets.DB_DATABASE }} \
+            --set backend.db.user=postgres \
+            --set backend.db.password=${{ secrets.DB_PASSWORD }}

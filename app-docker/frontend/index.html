@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Tasks — Frontend</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; }
+    h1 { margin-bottom: 0.5rem; }
+    .row { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    input, button { padding: 0.6rem 0.8rem; }
+    pre { background: #f6f6f6; padding: 1rem; border-radius: 8px; }
+    .muted { opacity: 0.7; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <h1>4Sale International Co. – Task</h1>
+  <p class="muted">This page calls the backend API via <code>/api</code> (proxied by NGINX).</p>
+
+  <div class="row">
+    <input id="title" placeholder="title" />
+    <input id="desc" placeholder="description" />
+    <button id="btnAdd">Add</button>
+    <button id="btnRefresh">Refresh</button>
+  </div>
+
+  <pre id="out">Loading...</pre>
+
+  <script>
+    const API = '/api';
+
+    async function add(){
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('desc').value.trim();
+      if(!title){ alert('Please enter a title'); return; }
+      const res = await fetch(API + '/addTask', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({title, description})
+      });
+      const txt = await res.text();
+      log(txt);
+      await list();
+    }
+
+    async function list(){
+      const res = await fetch(API + '/listTasks');
+      if(!res.ok){ log('Error fetching tasks: ' + res.status); return; }
+      const data = await res.json();
+      log(JSON.stringify(data, null, 2));
+    }
+
+    async function del(id){
+      const res = await fetch(API + '/deleteTask/' + id, { method: 'DELETE' });
+      const txt = await res.text();
+      log(txt);
+      await list();
+    }
+
+    function log(msg){
+      document.getElementById('out').textContent = msg;
+    }
+
+    document.getElementById('btnAdd').addEventListener('click', add);
+    document.getElementById('btnRefresh').addEventListener('click', list);
+
+    // Auto refresh
+    setInterval(list, 5000);
+    list();
+  </script>
+</body>
+</html>
