@@ -13,7 +13,7 @@ frontend:
       memory: 512Mi
   autoscaling:
     enabled: true
-    minReplicas: 2
+    minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80   
@@ -32,10 +32,10 @@ backend:
     limits:
       cpu: 500m
       memory: 512Mi
-      
+
   autoscaling:
     enabled: true
-    minReplicas: 2
+    minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 70
     targetMemoryUtilizationPercentage: 80     
