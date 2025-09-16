@@ -13,6 +13,8 @@ resource "aws_eks_cluster" "eks_cluster" {
   
 }
 
+
+
 # Step 4: Create IAM role for EKS
 resource "aws_iam_role" "eks_role" {
   name               = "eks_role"
@@ -121,35 +123,71 @@ data "aws_eks_cluster_auth" "eks_auth" {
   name = aws_eks_cluster.eks_cluster.name
 }
 
+#--------------------use ALB-------
 
-#Install AWS Load Balancer Controller via Helm
-# provider "helm" {
-#   kubernetes {
-#     host                   = aws_eks_cluster.eks_cluster.endpoint
-#     cluster_ca_certificate = base64decode(aws_eks_cluster.eks_cluster.certificate_authority[0].data)
-#     token                  = data.aws_eks_cluster_auth.eks_auth.token
+resource "aws_iam_role" "alb_controller_role" {
+  name = "alb-controller-role"
+  assume_role_policy = data.aws_iam_policy_document.lb_controller_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "alb_controller_policy" {
+  role       = aws_iam_role.alb_controller_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancerControllerPolicy"
+}
+
+# data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
+#   statement {
+#     actions = ["sts:AssumeRole"]
+#     principals {
+#       type        = "Service"
+#       identifiers = ["ec2.amazonaws.com"] # for pods using IAM roles via IRSA, will update below
+#     }
 #   }
 # }
 
-# resource "helm_release" "aws_load_balancer_controller" {
-#   name       = "aws-load-balancer-controller"
-#   repository = "https://aws.github.io/eks-charts"
-#   chart      = "aws-load-balancer-controller"
-#   namespace  = "kube-system"
+resource "aws_iam_openid_connect_provider" "eks" {
+  url             = aws_eks_cluster.eks_cluster.identity[0].oidc[0].issuer
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0ecd4e0a4"] # AWS OIDC thumbprint
+}
 
-#   set {
-#     name  = "clusterName"
-#     value = aws_eks_cluster.eks_cluster.name
-#   }
 
-#   set {
-#     name  = "serviceAccount.create"
-#     value = "false"
-#   }
+resource "kubernetes_service_account" "alb_controller" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
+    }
+  }
+}
 
-#   set {
-#     name  = "serviceAccount.name"
-#     value = "aws-load-balancer-controller"
-#   }
-# }
+resource "helm_release" "aws_load_balancer_controller" {
+  name       = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  chart      = "aws-load-balancer-controller"
+  namespace  = "kube-system"
+
+  set = [
+    {
+      name  = "clusterName"
+      value = aws_eks_cluster.eks_cluster.name
+    },
+    {
+      name  = "serviceAccount.create"
+      value = "false"
+    },
+    {
+      name  = "serviceAccount.name"
+      value = kubernetes_service_account.alb_controller.metadata[0].name
+    }
+  ]
+}
+
+
+
+
+
+
+
 
