@@ -187,144 +187,77 @@ resource "helm_release" "aws_load_balancer_controller" {
 resource "aws_iam_policy" "alb_controller_policy" {
   name        = "AWSLoadBalancerControllerIAMPolicy"
   description = "IAM policy for AWS Load Balancer Controller"
-  # policy      = file("iam-policy.json")
+    # policy      = file("iam-policy.json")
+
   policy      = <<EOT
-/*
-Note: This is a generated HCL content from the JSON input which is based on the latest API version available.
-To import the resource, please run the following command:
-terraform import azapi_resource. ?api-version=TODO
-
-Or add the below config:
-import {
-  id = "?api-version=TODO"
-  to = azapi_resource.
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "acm:DescribeCertificate",
+        "acm:ListCertificates",
+        "acm:GetCertificate",
+        "ec2:AuthorizeSecurityGroupIngress",
+        "ec2:CreateSecurityGroup",
+        "ec2:CreateTags",
+        "ec2:DeleteTags",
+        "ec2:DeleteSecurityGroup",
+        "ec2:Describe*",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:ModifyNetworkInterfaceAttribute",
+        "ec2:RevokeSecurityGroupIngress",
+        "elasticloadbalancing:AddTags",
+        "elasticloadbalancing:CreateListener",
+        "elasticloadbalancing:CreateLoadBalancer",
+        "elasticloadbalancing:CreateRule",
+        "elasticloadbalancing:CreateTargetGroup",
+        "elasticloadbalancing:DeleteListener",
+        "elasticloadbalancing:DeleteLoadBalancer",
+        "elasticloadbalancing:DeleteRule",
+        "elasticloadbalancing:DeleteTargetGroup",
+        "elasticloadbalancing:DeregisterTargets",
+        "elasticloadbalancing:Describe*",
+        "elasticloadbalancing:ModifyListener",
+        "elasticloadbalancing:ModifyLoadBalancerAttributes",
+        "elasticloadbalancing:ModifyRule",
+        "elasticloadbalancing:ModifyTargetGroup",
+        "elasticloadbalancing:ModifyTargetGroupAttributes",
+        "elasticloadbalancing:RegisterTargets",
+        "elasticloadbalancing:RemoveTags",
+        "elasticloadbalancing:SetIpAddressType",
+        "elasticloadbalancing:SetSecurityGroups",
+        "elasticloadbalancing:SetSubnets",
+        "elasticloadbalancing:SetWebAcl",
+        "iam:CreateServiceLinkedRole",
+        "iam:GetServerCertificate",
+        "iam:ListServerCertificates",
+        "cognito-idp:DescribeUserPoolClient",
+        "waf-regional:GetWebACL",
+        "waf-regional:GetWebACLForResource",
+        "waf-regional:AssociateWebACL",
+        "waf-regional:DisassociateWebACL",
+        "wafv2:GetWebACL",
+        "wafv2:GetWebACLForResource",
+        "wafv2:AssociateWebACL",
+        "wafv2:DisassociateWebACL",
+        "shield:DescribeProtection",
+        "shield:GetSubscriptionState",
+        "shield:DeleteProtection",
+        "shield:CreateProtection",
+        "shield:DescribeSubscription",
+        "shield:ListProtections"
+      ],
+      "Resource": "*"
+    }
+  ]
 }
-*/
-
-resource "azapi_resource" "" {
-  type      = "@TODO"
-  parent_id = "/subscriptions/$${var.subscriptionId}/resourceGroups/$${var.resourceGroupName}"
-  name      = ""
-  body = {
-    Statement = [{
-      Action = ["iam:CreateServiceLinkedRole"]
-      Condition = {
-        StringEquals = {
-          "iam:AWSServiceName" = "elasticloadbalancing.amazonaws.com"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action   = ["ec2:DescribeAccountAttributes", "ec2:DescribeAddresses", "ec2:DescribeAvailabilityZones", "ec2:DescribeInternetGateways", "ec2:DescribeVpcs", "ec2:DescribeVpcPeeringConnections", "ec2:DescribeSubnets", "ec2:DescribeSecurityGroups", "ec2:DescribeInstances", "ec2:DescribeNetworkInterfaces", "ec2:DescribeTags", "ec2:GetCoipPoolUsage", "ec2:DescribeCoipPools", "ec2:GetSecurityGroupsForVpc", "ec2:DescribeIpamPools", "ec2:DescribeRouteTables", "elasticloadbalancing:DescribeLoadBalancers", "elasticloadbalancing:DescribeLoadBalancerAttributes", "elasticloadbalancing:DescribeListeners", "elasticloadbalancing:DescribeListenerCertificates", "elasticloadbalancing:DescribeSSLPolicies", "elasticloadbalancing:DescribeRules", "elasticloadbalancing:DescribeTargetGroups", "elasticloadbalancing:DescribeTargetGroupAttributes", "elasticloadbalancing:DescribeTargetHealth", "elasticloadbalancing:DescribeTags", "elasticloadbalancing:DescribeTrustStores", "elasticloadbalancing:DescribeListenerAttributes", "elasticloadbalancing:DescribeCapacityReservation"]
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action   = ["cognito-idp:DescribeUserPoolClient", "acm:ListCertificates", "acm:DescribeCertificate", "iam:ListServerCertificates", "iam:GetServerCertificate", "waf-regional:GetWebACL", "waf-regional:GetWebACLForResource", "waf-regional:AssociateWebACL", "waf-regional:DisassociateWebACL", "wafv2:GetWebACL", "wafv2:GetWebACLForResource", "wafv2:AssociateWebACL", "wafv2:DisassociateWebACL", "shield:GetSubscriptionState", "shield:DescribeProtection", "shield:CreateProtection", "shield:DeleteProtection"]
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action   = ["ec2:AuthorizeSecurityGroupIngress", "ec2:RevokeSecurityGroupIngress"]
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action   = ["ec2:CreateSecurityGroup"]
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action = ["ec2:CreateTags"]
-      Condition = {
-        Null = {
-          "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
-        }
-        StringEquals = {
-          "ec2:CreateAction" = "CreateSecurityGroup"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "arn:aws:ec2:*:*:security-group/*"
-      }, {
-      Action = ["ec2:CreateTags", "ec2:DeleteTags"]
-      Condition = {
-        Null = {
-          "aws:RequestTag/elbv2.k8s.aws/cluster"  = "true"
-          "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "arn:aws:ec2:*:*:security-group/*"
-      }, {
-      Action = ["ec2:AuthorizeSecurityGroupIngress", "ec2:RevokeSecurityGroupIngress", "ec2:DeleteSecurityGroup"]
-      Condition = {
-        Null = {
-          "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action = ["elasticloadbalancing:CreateLoadBalancer", "elasticloadbalancing:CreateTargetGroup"]
-      Condition = {
-        Null = {
-          "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action   = ["elasticloadbalancing:CreateListener", "elasticloadbalancing:DeleteListener", "elasticloadbalancing:CreateRule", "elasticloadbalancing:DeleteRule"]
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action = ["elasticloadbalancing:AddTags", "elasticloadbalancing:RemoveTags"]
-      Condition = {
-        Null = {
-          "aws:RequestTag/elbv2.k8s.aws/cluster"  = "true"
-          "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
-        }
-      }
-      Effect   = "Allow"
-      Resource = ["arn:aws:elasticloadbalancing:*:*:targetgroup/*/*", "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*", "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"]
-      }, {
-      Action   = ["elasticloadbalancing:AddTags", "elasticloadbalancing:RemoveTags"]
-      Effect   = "Allow"
-      Resource = ["arn:aws:elasticloadbalancing:*:*:listener/net/*/*/*", "arn:aws:elasticloadbalancing:*:*:listener/app/*/*/*", "arn:aws:elasticloadbalancing:*:*:listener-rule/net/*/*/*", "arn:aws:elasticloadbalancing:*:*:listener-rule/app/*/*/*"]
-      }, {
-      Action = ["elasticloadbalancing:ModifyLoadBalancerAttributes", "elasticloadbalancing:SetIpAddressType", "elasticloadbalancing:SetSecurityGroups", "elasticloadbalancing:SetSubnets", "elasticloadbalancing:DeleteLoadBalancer", "elasticloadbalancing:ModifyTargetGroup", "elasticloadbalancing:ModifyTargetGroupAttributes", "elasticloadbalancing:DeleteTargetGroup", "elasticloadbalancing:ModifyListenerAttributes", "elasticloadbalancing:ModifyCapacityReservation", "elasticloadbalancing:ModifyIpPools"]
-      Condition = {
-        Null = {
-          "aws:ResourceTag/elbv2.k8s.aws/cluster" = "false"
-        }
-      }
-      Effect   = "Allow"
-      Resource = "*"
-      }, {
-      Action = ["elasticloadbalancing:AddTags"]
-      Condition = {
-        Null = {
-          "aws:RequestTag/elbv2.k8s.aws/cluster" = "false"
-        }
-        StringEquals = {
-          "elasticloadbalancing:CreateAction" = ["CreateTargetGroup", "CreateLoadBalancer"]
-        }
-      }
-      Effect   = "Allow"
-      Resource = ["arn:aws:elasticloadbalancing:*:*:targetgroup/*/*", "arn:aws:elasticloadbalancing:*:*:loadbalancer/net/*/*", "arn:aws:elasticloadbalancing:*:*:loadbalancer/app/*/*"]
-      }, {
-      Action   = ["elasticloadbalancing:RegisterTargets", "elasticloadbalancing:DeregisterTargets"]
-      Effect   = "Allow"
-      Resource = "arn:aws:elasticloadbalancing:*:*:targetgroup/*/*"
-      }, {
-      Action   = ["elasticloadbalancing:SetWebAcl", "elasticloadbalancing:ModifyListener", "elasticloadbalancing:AddListenerCertificates", "elasticloadbalancing:RemoveListenerCertificates", "elasticloadbalancing:ModifyRule", "elasticloadbalancing:SetRulePriorities"]
-      Effect   = "Allow"
-      Resource = "*"
-    }]
-    Version = "2012-10-17"
-  }
+EOT
 }
 
-  EOT
-}
+  # policy      = file("iam-policy.json")
+  
 
 resource "aws_iam_role_policy_attachment" "alb_controller_policy_attach" {
   role       = aws_iam_role.alb_controller_role.name
