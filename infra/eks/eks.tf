@@ -13,8 +13,6 @@ resource "aws_eks_cluster" "eks_cluster" {
   
 }
 
-
-
 # Step 4: Create IAM role for EKS
 resource "aws_iam_role" "eks_role" {
   name               = "eks_role"
@@ -123,144 +121,35 @@ data "aws_eks_cluster_auth" "eks_auth" {
   name = aws_eks_cluster.eks_cluster.name
 }
 
-#--------------------use ALB-------
 
-resource "aws_iam_role" "alb_controller_role" {
-  name = "alb-controller-role"
-  assume_role_policy = data.aws_iam_policy_document.lb_controller_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "alb_controller_policy" {
-  role       = aws_iam_role.alb_controller_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSLoadBalancerControllerPolicy"
-}
-
-# data "aws_iam_policy_document" "lb_controller_assume_role_policy" {
-#   statement {
-#     actions = ["sts:AssumeRole"]
-#     principals {
-#       type        = "Service"
-#       identifiers = ["ec2.amazonaws.com"] # for pods using IAM roles via IRSA, will update below
-#     }
+#Install AWS Load Balancer Controller via Helm
+# provider "helm" {
+#   kubernetes {
+#     host                   = aws_eks_cluster.eks_cluster.endpoint
+#     cluster_ca_certificate = base64decode(aws_eks_cluster.eks_cluster.certificate_authority[0].data)
+#     token                  = data.aws_eks_cluster_auth.eks_auth.token
 #   }
 # }
 
-resource "aws_iam_openid_connect_provider" "eks" {
-  url             = aws_eks_cluster.eks_cluster.identity[0].oidc[0].issuer
-  client_id_list  = ["sts.amazonaws.com"]
-  thumbprint_list = ["9e99a48a9960b14926bb7f3b02e22da0ecd4e0a4"] # AWS OIDC thumbprint
-}
+# resource "helm_release" "aws_load_balancer_controller" {
+#   name       = "aws-load-balancer-controller"
+#   repository = "https://aws.github.io/eks-charts"
+#   chart      = "aws-load-balancer-controller"
+#   namespace  = "kube-system"
 
+#   set {
+#     name  = "clusterName"
+#     value = aws_eks_cluster.eks_cluster.name
+#   }
 
-resource "kubernetes_service_account" "alb_controller" {
-  metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
-    annotations = {
-      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
-    }
-  }
-}
+#   set {
+#     name  = "serviceAccount.create"
+#     value = "false"
+#   }
 
-resource "helm_release" "aws_load_balancer_controller" {
-  name       = "aws-load-balancer-controller"
-  repository = "https://aws.github.io/eks-charts"
-  chart      = "aws-load-balancer-controller"
-  namespace  = "kube-system"
-
-  set = [
-    {
-      name  = "clusterName"
-      value = aws_eks_cluster.eks_cluster.name
-    },
-    {
-      name  = "serviceAccount.create"
-      value = "false"
-    },
-    {
-      name  = "serviceAccount.name"
-      value = kubernetes_service_account.alb_controller.metadata[0].name
-    }
-  ]
-}
-
-resource "aws_iam_policy" "alb_controller_policy" {
-  name        = "AWSLoadBalancerControllerIAMPolicy"
-  description = "IAM policy for AWS Load Balancer Controller"
-    # policy      = file("iam-policy.json")
-
-  policy      = <<EOT
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "acm:DescribeCertificate",
-        "acm:ListCertificates",
-        "acm:GetCertificate",
-        "ec2:AuthorizeSecurityGroupIngress",
-        "ec2:CreateSecurityGroup",
-        "ec2:CreateTags",
-        "ec2:DeleteTags",
-        "ec2:DeleteSecurityGroup",
-        "ec2:Describe*",
-        "ec2:ModifyInstanceAttribute",
-        "ec2:ModifyNetworkInterfaceAttribute",
-        "ec2:RevokeSecurityGroupIngress",
-        "elasticloadbalancing:AddTags",
-        "elasticloadbalancing:CreateListener",
-        "elasticloadbalancing:CreateLoadBalancer",
-        "elasticloadbalancing:CreateRule",
-        "elasticloadbalancing:CreateTargetGroup",
-        "elasticloadbalancing:DeleteListener",
-        "elasticloadbalancing:DeleteLoadBalancer",
-        "elasticloadbalancing:DeleteRule",
-        "elasticloadbalancing:DeleteTargetGroup",
-        "elasticloadbalancing:DeregisterTargets",
-        "elasticloadbalancing:Describe*",
-        "elasticloadbalancing:ModifyListener",
-        "elasticloadbalancing:ModifyLoadBalancerAttributes",
-        "elasticloadbalancing:ModifyRule",
-        "elasticloadbalancing:ModifyTargetGroup",
-        "elasticloadbalancing:ModifyTargetGroupAttributes",
-        "elasticloadbalancing:RegisterTargets",
-        "elasticloadbalancing:RemoveTags",
-        "elasticloadbalancing:SetIpAddressType",
-        "elasticloadbalancing:SetSecurityGroups",
-        "elasticloadbalancing:SetSubnets",
-        "elasticloadbalancing:SetWebAcl",
-        "iam:CreateServiceLinkedRole",
-        "iam:GetServerCertificate",
-        "iam:ListServerCertificates",
-        "cognito-idp:DescribeUserPoolClient",
-        "waf-regional:GetWebACL",
-        "waf-regional:GetWebACLForResource",
-        "waf-regional:AssociateWebACL",
-        "waf-regional:DisassociateWebACL",
-        "wafv2:GetWebACL",
-        "wafv2:GetWebACLForResource",
-        "wafv2:AssociateWebACL",
-        "wafv2:DisassociateWebACL",
-        "shield:DescribeProtection",
-        "shield:GetSubscriptionState",
-        "shield:DeleteProtection",
-        "shield:CreateProtection",
-        "shield:DescribeSubscription",
-        "shield:ListProtections"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOT
-}
-
-  # policy      = file("iam-policy.json")
-  
-
-resource "aws_iam_role_policy_attachment" "alb_controller_policy_attach" {
-  role       = aws_iam_role.alb_controller_role.name
-  policy_arn = aws_iam_policy.alb_controller_policy.arn
-}
+#   set {
+#     name  = "serviceAccount.name"
+#     value = "aws-load-balancer-controller"
+#   }
+# }
 
