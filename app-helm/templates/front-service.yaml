@@ -10,4 +10,4 @@ spec:
       port: 80
       targetPort: 8080
   # type: NodePort   # For Minikube access or when use ALB
-  type: LoadBalancer   # For Minikube access
+  type: LoadBalancer   l
