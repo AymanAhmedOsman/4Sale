@@ -40,14 +40,36 @@ jobs:
         run: |
           FRONTEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.FRONTEND_IMAGE }}
           docker build -t $FRONTEND_REPO:latest ./app-docker/frontend
-          docker push $FRONTEND_REPO:latest
+        # docker push $FRONTEND_REPO:latest
 
       # 5. Build & Push Backend
       - name: Build and Push Backend
         run: |
           BACKEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.BACKEND_IMAGE }}
           docker build -t $BACKEND_REPO:latest ./app-docker/backend
+       # docker push $BACKEND_REPO:latest
+
+      #------
+      - name: Trivy scan Backend
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          image-ref: |
+            ${{ steps.ecr.outputs.registry }}/${{ env.BACKEND_IMAGE }}:latest
+            ${{ steps.ecr.outputs.registry }}/${{ env.FRONTEND_IMAGE }}:latest
+          format: 'table'
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'   # <- do not stop workflow
+      #-------
+        
+      - name: push-frontend & backend 
+        run: | 
+          FRONTEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.FRONTEND_IMAGE }}
+          BACKEND_REPO=${{ steps.ecr.outputs.registry }}/${{ env.BACKEND_IMAGE }}
+          docker push $FRONTEND_REPO:latest
           docker push $BACKEND_REPO:latest
+
 
       # 6. Update kubeconfig
       - name: Update kubeconfig for EKS
@@ -90,3 +112,20 @@ jobs:
             --set backend.db.name=${{ secrets.DB_DATABASE }} \
             --set backend.db.user=postgres \
             --set backend.db.password=${{ secrets.DB_PASSWORD }}
+
+      #create monitoring namespace 
+      - name: Create monitoring namespace
+        run: |
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label namespace monitoring pod-security.kubernetes.io/enforce=baseline --overwrite
+
+      # 7.2 Install Prometheus + Grafana via Helm (kube-prometheus-stack)
+      - name: Install Prometheus + Grafana
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm upgrade --install kube-prom-stack prometheus-community/kube-prometheus-stack \
+            --namespace monitoring --create-namespace \
+            --set grafana.adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }} \
+            --set grafana.service.type=LoadBalancer \
+            --set prometheus.service.type=LoadBalancer
