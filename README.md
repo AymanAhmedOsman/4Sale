@@ -1,4 +1,4 @@
-# DevSecOps 3‑Tier Application (Tasks) — EKS + Helm + Terraform + GitHub Actions
+# DevOps 3‑Tier Application (Tasks) — EKS + Helm + Terraform + GitHub Actions
 
 This repo contains a complete, working reference implementation to satisfy your task requirements:
 
@@ -54,7 +54,7 @@ helm upgrade --install tasks ./app-helm -n app -f ./app-helm/values.yaml
 ```
 
 ### HPA
-Configured for the backend (FastAPI) to scale on CPU (target 60%) and QPS via custom metrics (optional). Adjust under `app-helm/templates/back-hpa.yaml` and values.
+Configured for the backend (FastAPI) to scale on CPU (target 70%) and QPS via custom metrics (optional). Adjust under `app-helm/templates/back-hpa.yaml` and values.
 
 ### NetworkPolicies
 - Only pods in `app` namespace with label `app=backend` can reach Postgres service in `data` namespace.
@@ -94,7 +94,7 @@ Creates:
 
 ```bash
 # CLI envs
-$env:TARGET_HOST=<"http://af41af9dad1484dc1aa409b9dfc22739-1052132446.eu-west-1.elb.amazonaws.com">
+$env:TARGET_HOST=<"DNS-Loadbalancer">
 $env:FRONTEND_PATH="/" 
 $env:BACKEND_PATH="/api/listTasks" 
 $env:WAIT_TIME_MIN="1"  
@@ -105,8 +105,8 @@ locust -f testscript.py --headless -u 200 -r 20 -t 10m
 
 ```
 
-The script exercises `addTask`, `listTasks`, and `deleteTask` to validate HPA scaling under load.
-
+Only GETs (one for “frontend”, one for “backend”).
+Good for smoke/latency and read-heavy scenarios or separating FE vs API paths.
 ---
 
 ## 5) CI/CD (GitHub Actions)
@@ -125,7 +125,6 @@ Secrets/variables to add in GitHub:
 ## 6) Security (How Enforced & Tests)
 
 - **Access control**: Kubernetes **RBAC** manifests (`helm/tasks-app/templates/rbac.yaml`), GitHub OIDC role with least privileges for CI, per‑ns restrictions.
-- **DDoS & WAF**: On AWS, deploy **AWS WAF** on ALB/NLB fronting the Ingress; **AWS Shield Standard** is on by default; **Shield Advanced** optional.
 - **Encryption**: 
   - **At rest**: EBS volumes and RDS/EBS CSI with **KMS CMK**; secrets via **SOPS** or **Sealed Secrets** (examples included). 
   - **In transit**: TLS on Ingress; mTLS (optional) via service mesh (Istio/Linkerd) or OPA policies.
@@ -150,9 +149,7 @@ Secrets/variables to add in GitHub:
   - Pod crash loops
   - Postgres down
 
-### OpenTelemetry & Jaeger (Bonus)
-- Deploy **Jaeger** (all‑in‑one) and **OpenTelemetry Collector**
-- Backend emits traces via OTLP (env‑config in deployment)
+
 
 ### Alert Delivery
 - Configure Alertmanager receivers (email/webhook) under `monitoring/alertmanager-values.yaml`.
