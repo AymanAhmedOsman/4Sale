@@ -31,11 +31,11 @@ spec:
         #----------
           resources:                          # ⬅️ ADD THIS
             requests:
-              cpu: {{ .Values.backend.resources.requests.cpu }}
-              memory: {{ .Values.backend.resources.requests.memory }}
+              cpu: {{ .Values.frontend.resources.requests.cpu }}
+              memory: {{ .Values.frontend.resources.requests.memory }}
             limits:
-              cpu: {{ .Values.backend.resources.limits.cpu }}
-              memory: {{ .Values.backend.resources.limits.memory }}
+              cpu: {{ .Values.frontend.resources.limits.cpu }}
+              memory: {{ .Values.frontend.resources.limits.memory }}
         #----------      
           env:
             - name: DB_HOST
