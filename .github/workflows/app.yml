@@ -122,19 +122,19 @@ jobs:
             --set backend.db.user=postgres \
             --set backend.db.password=${{ secrets.DB_PASSWORD }}
 
-      # #create monitoring namespace 
-      # - name: Create monitoring namespace
-      #   run: |
-      #     kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
-      #     kubectl label namespace monitoring pod-security.kubernetes.io/enforce=baseline --overwrite
+      #create monitoring namespace 
+      - name: Create monitoring namespace
+        run: |
+          kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
+          kubectl label namespace monitoring pod-security.kubernetes.io/enforce=baseline --overwrite
 
-      # # 7.2 Install Prometheus + Grafana via Helm (kube-prometheus-stack)
-      # - name: Install Prometheus + Grafana
-      #   run: |
-      #     helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
-      #     helm repo update
-      #     helm upgrade --install kube-prom-stack prometheus-community/kube-prometheus-stack \
-      #       --namespace monitoring --create-namespace \
-      #       --set grafana.adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }} \
-      #       --set grafana.service.type=LoadBalancer \
-      #       --set prometheus.service.type=LoadBalancer
+      # 7.2 Install Prometheus + Grafana via Helm (kube-prometheus-stack)
+      - name: Install Prometheus + Grafana
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo update
+          helm upgrade --install kube-prom-stack prometheus-community/kube-prometheus-stack \
+            --namespace monitoring --create-namespace \
+            --set grafana.adminPassword=${{ secrets.GRAFANA_ADMIN_PASSWORD }} \
+            --set grafana.service.type=LoadBalancer \
+            --set prometheus.service.type=LoadBalancer
