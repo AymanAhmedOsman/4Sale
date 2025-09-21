@@ -43,7 +43,5 @@ subnet-public-2-id =module.network.subnet_id-public2
 node-group-name =var.node-group-name
 public-sg-name = module.security_groups.public-sg-name
 key_name=module.ec2.key_name
-vpc_id = module.network.vpc_id
-region = var.region
  
  }
